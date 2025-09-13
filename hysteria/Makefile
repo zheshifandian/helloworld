@@ -8,37 +8,25 @@ PKG_NAME:=hysteria
 PKG_VERSION:=2.6.3
 PKG_RELEASE:=1
 
-PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
-PKG_SOURCE_URL:=https://codeload.github.com/apernet/hysteria/tar.gz/app/v$(PKG_VERSION)?
-PKG_HASH:=bed1ece93dfaa07fbf709136efadaf4ccb09e0375844de3e28c5644ebe518eb0
-PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-app-v$(PKG_VERSION)
+PKG_ARCH:=$(PKG_NAME)-linux-arm64
+PKG_HASH:=f40b96c8aaf69f0c8af9f3b3aa4784e5b455b3d1280c98d5ef4842d5a7078f79
 
-PKG_LICENSE:=MIT
-PKG_LICENSE_FILE:=LICENSE
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION)-$(ARCH_PACKAGES)
+PKG_SOURCE_URL:=https://github.com/apernet/hysteria/releases/download/app/v$(PKG_VERSION)/$(PKG_ARCH)?
+UNPACK_CMD=$(CP) $(DL_DIR)/$(PKG_SOURCE) $(PKG_BUILD_DIR)/$(PKG_NAME)
+
+PKG_LICENSE:=AGPL-3.0-only
+PKG_LICENSE_FILES:=LICENSE
 PKG_MAINTAINER:=Tianling Shen <cnsztl@immortalwrt.org>
 
-PKG_BUILD_DEPENDS:=golang/host
-PKG_BUILD_PARALLEL:=1
-PKG_USE_MIPS16:=0
-PKG_BUILD_FLAGS:=no-mips16
-
-GO_PKG:=github.com/apernet/hysteria
-GO_PKG_BUILD_PKG:=$(GO_PKG)/app/v2
-GO_PKG_LDFLAGS_X = \
-	$(GO_PKG)/app/v2/cmd.appVersion=v$(PKG_VERSION) \
-	$(GO_PKG)/app/v2/cmd.appType=release \
-	$(GO_PKG)/app/v2/cmd.appPlatform=$(GO_OS) \
-	$(GO_PKG)/app/v2/cmd.appArch=$(GO_ARCH)
-
 include $(INCLUDE_DIR)/package.mk
-include $(TOPDIR)/feeds/packages/lang/golang/golang-package.mk
 
 define Package/hysteria
-  SECTION:=net
-  CATEGORY:=Network
+  SECTION:=Bin aarch64
+  CATEGORY:=Bin aarch64
   TITLE:=A feature-packed network utility optimized for networks of poor quality
   URL:=https://github.com/apernet/hysteria
-  DEPENDS:=$(GO_ARCH_DEPENDS) +ca-bundle
+  DEPENDS:=@aarch64 +ca-bundle
 endef
 
 define Package/hysteria/description
@@ -48,12 +36,12 @@ define Package/hysteria/description
   of QUIC protocol.
 endef
 
-define Package/hysteria/install
-	$(call GoPackage/Package/Install/Bin,$(PKG_INSTALL_DIR))
-
-	$(INSTALL_DIR) $(1)/usr/bin/
-	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/app $(1)/usr/bin/hysteria
+define Build/Compile
 endef
 
-$(eval $(call GoBinPackage,hysteria))
+define Package/hysteria/install
+	$(INSTALL_DIR) $(1)/usr/bin/
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/hysteria $(1)/usr/bin/hysteria
+endef
+
 $(eval $(call BuildPackage,hysteria))

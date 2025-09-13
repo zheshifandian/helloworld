@@ -8,32 +8,32 @@ PKG_NAME:=tuic-client
 PKG_VERSION:=1.0.0
 PKG_RELEASE:=1
 
-PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
-PKG_SOURCE_URL:=https://codeload.github.com/EAimTY/tuic/tar.gz/tuic-client-$(PKG_VERSION)?
-PKG_HASH:=64d81f3d5c79d9d69229e927c3f842849885f547020d897f9624d185819e5661
-PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)/$(PKG_NAME)
+PKG_ARCH:=tuic-client-$(PKG_VERSION)-aarch64-unknown-linux-musl
+PKG_HASH:=c29eaaf3bc05115acc7453ac26bacf9aff65211b1e8ca7f771b818248bec8601
 
-PKG_MAINTAINER:=Tianling Shen <cnsztl@immortalwrt.org>
-PKG_LICENSE:=GPL-3.0-only
+PKG_SOURCE:=$(PKG_NAME)-linux-arm64-v$(PKG_VERSION)
+PKG_SOURCE_URL:=https://github.com/tuic-protocol/tuic/releases/download/$(PKG_NAME)-$(PKG_VERSION)/$(PKG_ARCH)?
+UNPACK_CMD=$(CP) $(DL_DIR)/$(PKG_SOURCE) $(PKG_BUILD_DIR)/$(PKG_NAME)
+
 PKG_LICENSE_FILES:=LICENSE
-
-PKG_BUILD_DEPENDS:=rust/host
-PKG_BUILD_PARALLEL:=1
+PKG_MAINTAINER:=Tianling Shen <cnsztl@immortalwrt.org>
 
 include $(INCLUDE_DIR)/package.mk
-include $(TOPDIR)/feeds/packages/lang/rust/rust-package.mk
-
-TAR_OPTIONS+= --strip-components 1
-TAR_CMD=$(HOST_TAR) -C $(1)/.. $(TAR_OPTIONS)
 
 define Package/tuic-client
-  SECTION:=net
-  CATEGORY:=Network
-  SUBMENU:=Web Servers/Proxies
-  TITLE:=Delicately-TUICed 0-RTT proxy protocol (client)
-  URL:=https://github.com/EAimTY/tuic
-  DEPENDS:=@(aarch64||arm||x86_64)
+  SECTION:=Bin aarch64
+  CATEGORY:=Bin aarch64
+  TITLE:=Delicately-TUICed 0-RTT proxy protocol
+  URL:=https://github.com/EAimTY/tuic/
+  DEPENDS:=@USE_MUSL @aarch64
 endef
 
-$(eval $(call RustBinPackage,tuic-client))
+define Build/Compile
+endef
+
+define Package/tuic-client/install
+	$(INSTALL_DIR) $(1)/usr/bin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/tuic-client $(1)/usr/bin/tuic-client
+endef
+
 $(eval $(call BuildPackage,tuic-client))

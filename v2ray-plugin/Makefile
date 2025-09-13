@@ -9,33 +9,47 @@ PKG_NAME:=v2ray-plugin
 PKG_VERSION:=5.37.0
 PKG_RELEASE:=1
 
-PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
-PKG_SOURCE_URL:=https://codeload.github.com/teddysun/v2ray-plugin/tar.gz/v$(PKG_VERSION)?
-PKG_HASH:=7796924dc2dbd1ec392953467b3ff432cdcd266bf8d1c61b5a693fdc9e9a9230
+PKG_LICENSE:=GPL-3.0-only
+PKG_MAINTAINER:=Jack Sun <sunjiazheng321521@gmail.com>
+PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
 
-PKG_LICENSE:=MIT
-PKG_LICENSE_FILES:=LICENSE
-PKG_MAINTAINER:=madeye <max.c.lv@gmail.com>
-
-PKG_BUILD_DEPENDS:=golang/host
-PKG_BUILD_PARALLEL:=1
-PKG_USE_MIPS16:=0
-PKG_BUILD_FLAGS:=no-mips16
-
-GO_PKG:=github.com/teddysun/v2ray-plugin
-GO_PKG_LDFLAGS_X:=main.VERSION=v$(PKG_VERSION)
+PKG_ARCH:=linux-arm64
+PKG_HASH:=skip
 
 include $(INCLUDE_DIR)/package.mk
-include $(TOPDIR)/feeds/packages/lang/golang/golang-package.mk
+
+TAR_OPTIONS+= --strip-components 0
 
 define Package/v2ray-plugin
-  SECTION:=net
-  CATEGORY:=Network
-  SUBMENU:=Web Servers/Proxies
+  SECTION:=Bin aarch64
+  CATEGORY:=Bin aarch64
   TITLE:=SIP003 plugin for shadowsocks, based on v2ray
   URL:=https://github.com/teddysun/v2ray-plugin
-  DEPENDS:=$(GO_ARCH_DEPENDS) +ca-bundle
+  DEPENDS:=@aarch64 +ca-bundle
 endef
 
-$(eval $(call GoBinPackage,v2ray-plugin))
+BIN_FILE:=$(PKG_NAME)-$(PKG_ARCH)-v$(PKG_VERSION).tar.gz
+
+define Download/v2ray-plugin
+  URL:=https://github.com/teddysun/v2ray-plugin/releases/download/v$(PKG_VERSION)/
+  URL_FILE:=$(PKG_NAME)-$(PKG_ARCH)-v$(PKG_VERSION).tar.gz
+  FILE:=$(BIN_FILE)
+  HASH:=$(PKG_HASH)
+endef
+
+define Build/Prepare
+	rm -rf $(BUILD_DIR)/$(PKG_NAME)
+	mkdir -p $(PKG_BUILD_DIR)
+	gzip -dc $(DL_DIR)/$(BIN_FILE) | $(HOST_TAR) -C $(PKG_BUILD_DIR)/ $(TAR_OPTIONS)
+endef
+
+define Build/Compile
+endef
+
+define Package/v2ray-plugin/install
+	$(INSTALL_DIR) $(1)/usr/bin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/v2ray-plugin_linux_arm64 $(1)/usr/bin/v2ray-plugin
+endef
+
+$(eval $(call Download,v2ray-plugin))
 $(eval $(call BuildPackage,v2ray-plugin))
