@@ -8,32 +8,47 @@ PKG_NAME:=xray-plugin
 PKG_VERSION:=1.8.24
 PKG_RELEASE:=1
 
-PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
-PKG_SOURCE_URL:=https://codeload.github.com/teddysun/xray-plugin/tar.gz/v$(PKG_VERSION)?
-PKG_HASH:=1150968f8791df884ce0ab5b2dbc870496088c90b5ffcc7f21497075aab7b1b5
+PKG_LICENSE:=GPL-3.0-only
+PKG_MAINTAINER:=Jack Sun <sunjiazheng321521@gmail.com>
+PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
 
-PKG_LICENSE:=MIT
-PKG_LICENSE_FILES:=LICENSE
-PKG_MAINTAINER:=Tianling Shen <cnsztl@immortalwrt.org>
-
-PKG_BUILD_DEPENDS:=golang/host
-PKG_BUILD_PARALLEL:=1
-PKG_USE_MIPS16:=0
-PKG_BUILD_FLAGS:=no-mips16
-
-GO_PKG:=github.com/teddysun/xray-plugin
+PKG_ARCH:=linux-arm64
+PKG_HASH:=skip
 
 include $(INCLUDE_DIR)/package.mk
-include $(TOPDIR)/feeds/packages/lang/golang/golang-package.mk
+
+TAR_OPTIONS+= --strip-components 0
 
 define Package/xray-plugin
-  SECTION:=net
-  CATEGORY:=Network
-  SUBMENU:=Web Servers/Proxies
+  SECTION:=Bin aarch64
+  CATEGORY:=Bin aarch64
   TITLE:=SIP003 plugin for Shadowsocks, based on Xray
   URL:=https://github.com/teddysun/xray-plugin
-  DEPENDS:=$(GO_ARCH_DEPENDS) +ca-bundle
+  DEPENDS:=@aarch64 +ca-bundle
 endef
 
-$(eval $(call GoBinPackage,xray-plugin))
+BIN_FILE:=$(PKG_NAME)-$(PKG_ARCH)-v$(PKG_VERSION).tar.gz
+
+define Download/xray-plugin
+  URL:=https://github.com/teddysun/xray-plugin/releases/download/v$(PKG_VERSION)/
+  URL_FILE:=$(PKG_NAME)-$(PKG_ARCH)-v$(PKG_VERSION).tar.gz
+  FILE:=$(BIN_FILE)
+  HASH:=$(PKG_HASH)
+endef
+
+define Build/Prepare
+	rm -rf $(BUILD_DIR)/$(PKG_NAME)
+	mkdir -p $(PKG_BUILD_DIR)
+	gzip -dc $(DL_DIR)/$(BIN_FILE) | $(HOST_TAR) -C $(PKG_BUILD_DIR)/ $(TAR_OPTIONS)
+endef
+
+define Build/Compile
+endef
+
+define Package/xray-plugin/install
+	$(INSTALL_DIR) $(1)/usr/bin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/xray-plugin_linux_arm64 $(1)/usr/bin/xray-plugin
+endef
+
+$(eval $(call Download,xray-plugin))
 $(eval $(call BuildPackage,xray-plugin))
