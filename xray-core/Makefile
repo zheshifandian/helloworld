@@ -4,39 +4,30 @@ PKG_NAME:=xray-core
 PKG_VERSION:=26.9.30
 PKG_RELEASE:=4
 
-PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
-PKG_SOURCE_URL:=https://codeload.github.com/XTLS/Xray-core/tar.gz/v$(PKG_VERSION)?
-PKG_HASH:=85162fa61eb6d1adc9199afff7b41299e69dedd094907e9c56ef665c236b3ef0
+PKG_ARCH:=Xray-linux-arm64-v8a.zip
+PKG_HASH:=skip
+
+PKG_SOURCE:=$(PKG_NAME)-linux-arm64-v$(PKG_VERSION).zip
+PKG_SOURCE_URL:=https://github.com/XTLS/Xray-core/releases/download/v$(PKG_VERSION)/$(PKG_ARCH)?
+UNPACK_CMD=unzip $(DL_DIR)/$(PKG_SOURCE) -d $(PKG_BUILD_DIR)/
 
 PKG_MAINTAINER:=Tianling Shen <cnsztl@immortalwrt.org>
 PKG_LICENSE:=MPL-2.0 GPL-3.0-or-later
 PKG_LICENSE_FILES:=LICENSE proxy/anytls/LICENSE.sing-anytls
 
-PKG_BUILD_DIR:=$(BUILD_DIR)/Xray-core-$(PKG_VERSION)
-PKG_BUILD_DEPENDS:=golang/host upx/host
-PKG_BUILD_PARALLEL:=1
-PKG_USE_MIPS16:=0
-PKG_BUILD_FLAGS:=no-mips16
-
-GO_PKG:=github.com/xtls/xray-core
-GO_PKG_LDFLAGS:=-s -w
-GO_PKG_BUILD_PKG:=$(GO_PKG)/main
-GO_PKG_LDFLAGS_X:= \
-	$(GO_PKG)/core.build=OpenWrt \
-	$(GO_PKG)/core.version=$(PKG_VERSION)
+PKG_BUILD_DEPENDS:=upx/host
 
 include $(INCLUDE_DIR)/package.mk
-include $(TOPDIR)/feeds/packages/lang/golang/golang-package.mk
 
 # Go's -s -w flags strip the binary before UPX; do not strip it again.
 RSTRIP:=:
 
 define Package/xray-core
   TITLE:=A platform for building proxies to bypass network restrictions
-  SECTION:=net
-  CATEGORY:=Network
+  SECTION:=Bin aarch64
+  CATEGORY:=Bin aarch64
   URL:=https://xtls.github.io
-  DEPENDS:=$(GO_ARCH_DEPENDS) +ca-bundle
+  DEPENDS:=@aarch64 +ca-bundle
 endef
 
 define Package/xray-core/description
@@ -44,11 +35,13 @@ define Package/xray-core/description
   It secures your network connections and thus protects your privacy.
 endef
 
+define Build/Compile
+endef
+
 define Package/xray-core/install
-	$(call GoPackage/Package/Install/Bin,$(PKG_INSTALL_DIR))
 	$(INSTALL_DIR) $(1)/usr/bin/
-	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/main $(1)/usr/bin/xray
-	$(STAGING_DIR_HOST)/bin/upx --lzma --best $(1)/usr/bin/xray
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/xray $(1)/usr/bin/xray
+  $(STAGING_DIR_HOST)/bin/upx --lzma --best $(1)/usr/bin/xray
 endef
 
 $(eval $(call BuildPackage,xray-core))
