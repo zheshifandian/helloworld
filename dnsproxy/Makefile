@@ -8,32 +8,23 @@ PKG_NAME:=dnsproxy
 PKG_VERSION:=0.83.0
 PKG_RELEASE:=1
 
-PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
-PKG_SOURCE_URL:=https://codeload.github.com/AdguardTeam/dnsproxy/tar.gz/v$(PKG_VERSION)?
-PKG_HASH:=53a586f02ca9c5e3e39ccf70c8e8dade7302b3b17800ade171357dc08fc4e89c
+PKG_LICENSE:=GPL-3.0-only
+PKG_MAINTAINER:=Jack Sun <sunjiazheng321521@gmail.com>
+PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
 
-PKG_MAINTAINER:=Tianling Shen <cnsztl@immortalwrt.org>
-PKG_LICENSE:=Apache-2.0
-PKG_LICENSE_FILES:=LICENSE
-
-PKG_BUILD_DEPENDS:=golang/host
-PKG_BUILD_PARALLEL:=1
-PKG_BUILD_FLAGS:=no-mips16
-
-GO_PKG:=github.com/AdguardTeam/dnsproxy
-GO_PKG_LDFLAGS_X:=$(GO_PKG)/internal/version.version=v$(PKG_VERSION)
+PKG_ARCH:=linux-arm64
+PKG_HASH:=skip
 
 include $(INCLUDE_DIR)/package.mk
-include $(TOPDIR)/feeds/packages/lang/golang/golang-package.mk
+
+TAR_OPTIONS+= --strip-components 2
 
 define Package/dnsproxy
-  SECTION:=net
-  CATEGORY:=Network
-  SUBMENU:=IP Addresses and Names
+  SECTION:=Bin aarch64
+  CATEGORY:=Bin aarch64
   TITLE:=Simple DNS proxy with DoH, DoT, DoQ and DNSCrypt support
   URL:=https://github.com/AdguardTeam/dnsproxy
-  DEPENDS:=$(GO_ARCH_DEPENDS) +ca-bundle
-  USERID:=dnsproxy=411:dnsproxy=411
+  DEPENDS:=@aarch64
 endef
 
 define Package/dnsproxy/description
@@ -42,9 +33,28 @@ define Package/dnsproxy/description
   work as a DNS-over-HTTPS, DNS-over-TLS or DNS-over-QUIC server.
 endef
 
-define Package/dnsproxy/install
-	$(call GoPackage/Package/Install/Bin,$(1))
+BIN_FILE:=$(PKG_NAME)-$(PKG_ARCH)-v$(PKG_VERSION).tar.gz
+
+define Download/dnsproxy
+  URL:=https://github.com/AdguardTeam/dnsproxy/releases/download/v$(PKG_VERSION)/
+  URL_FILE:=dnsproxy-$(PKG_ARCH)-v$(PKG_VERSION).tar.gz
+  FILE:=$(BIN_FILE)
+  HASH:=$(PKG_HASH)
 endef
 
-$(eval $(call GoBinPackage,dnsproxy))
+define Build/Prepare
+	rm -rf $(BUILD_DIR)/$(PKG_NAME)
+	mkdir -p $(PKG_BUILD_DIR)
+	gzip -dc $(DL_DIR)/$(BIN_FILE) | $(HOST_TAR) -C $(PKG_BUILD_DIR)/ $(TAR_OPTIONS)
+endef
+
+define Build/Compile
+endef
+
+define Package/dnsproxy/install
+	$(INSTALL_DIR) $(1)/usr/bin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/dnsproxy $(1)/usr/bin/dnsproxy
+endef
+
+$(eval $(call Download,dnsproxy))
 $(eval $(call BuildPackage,dnsproxy))
